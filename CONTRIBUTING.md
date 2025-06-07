@@ -581,7 +581,6 @@ Your contributions make Pascal LSP better for everyone. Whether you're fixing a 
 ## 📞 Contact
 
 - **Project Maintainer**: [Your GitHub Profile](https://github.com/mmfbr)
-- **Email**: [your.email@example.com] (for security issues)
 - **Discord**: [Community Discord Server]
 
 ---

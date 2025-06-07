@@ -304,7 +304,7 @@ end;
 - **[FreePascal Team](https://www.freepascal.org/)** - Amazing Pascal compiler
 
 ### Contributors
-- **[Your Name](https://github.com/mmfbr)** - Project creator and maintainer
+- **[mmfbr](https://github.com/mmfbr)** - Project creator and maintainer
 - **[Community Contributors](https://github.com/mmfbr/pascal-lsp-types/contributors)** - Thank you! 🙏
 
 ## 📄 License
