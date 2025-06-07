@@ -1,0 +1,46 @@
+{
+  "name": "pascal-lsp-extension",
+  "displayName": "Pascal LSP",
+  "description": "Language Server Protocol para Pascal/Delphi",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Programming Languages"],
+  "activationEvents": [
+    "onLanguage:pascal"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pascal",
+        "aliases": ["Pascal", "pascal"],
+        "extensions": [".pas", ".pp", ".inc"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Pascal LSP",
+      "properties": {
+        "pascalLSP.serverPath": {
+          "type": "string", 
+          "default": "./BasicLSPServer",
+          "description": "Caminho para o executável do servidor LSP"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "typescript": "^4.4.0"
+  }
+}
