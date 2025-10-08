@@ -6,13 +6,13 @@ uses
   Classes, SysUtils;
 
 type
-  // Teste de hover em tipos
+  // Тестирование подсказки при наведении курсора на типы
   TPerson = record
     Name: string;
     Age: Integer;
   end;
 
-  // Teste de completion em classes
+  // Тестирование автодополнения в классах
   TCalculator = class
   private
     FValue: Double;
@@ -23,7 +23,7 @@ type
     property Value: Double read FValue write FValue;
   end;
 
-// === IMPLEMENTAÇÃO ===
+// === РЕАЛИЗАЦИЯ ===
 constructor TCalculator.Create;
 begin
   inherited Create;
@@ -42,63 +42,87 @@ begin
   Result := FValue;
 end;
 
-// === PROGRAMA PRINCIPAL ===
+// === ГЛАВНАЯ ПРОГРАММА ===
 var
   Person: TPerson;
   Calc: TCalculator;
   ResultValue: Double;
 
 begin
-  WriteLn('=== Teste Pascal LSP ===');
+  WriteLn('=== Тест Pascal LSP ===');
   
-  // Teste hover aqui - passar mouse sobre 'Person'
+  // Тест подсказки при наведении - наведите мышь на 'Person'
   Person.Name := 'João';
   Person.Age := 30;
   
-  WriteLn('Nome: ', Person.Name);
-  WriteLn('Idade: ', Person.Age);
+  WriteLn('Имя: ', Person.Name);
+  WriteLn('Возраст: ', Person.Age);
   
-  // Teste completion aqui - digitar 'Calc.' e ver sugestões
+  // Тест автодополнения - введите 'Calc.' и посмотрите предложения
   Calc := TCalculator.Create;
   try
     ResultValue := Calc.Add(10);
     ResultValue := Calc.Multiply(2);
     
-    WriteLn('Resultado: ', ResultValue:0:2);
+    WriteLn('Результат: ', ResultValue:0:2);
   finally
     Calc.Free;
   end;
   
-  // Teste completion de palavras-chave - digitar 'beg' e ver 'begin'
-  WriteLn('Teste concluído!');
+  // Тест автодополнения ключевых слов - введите 'beg' и посмотрите 'begin'
+  WriteLn('Тест завершён!');
 end.
 
-// === MELHORIAS SUGERIDAS PARA O SERVIDOR ===
+// === ПРЕДЛОЖЕННЫЕ УЛУЧШЕНИЯ ДЛЯ СЕРВЕРА ===
 
 (*
 unit LSPServerEnhanced;
 
-// 1. ADICIONAR PARSING REAL DE PASCAL
+// 1. ДОБАВИТЬ РЕАЛЬНЫЙ РАЗБОР PASCAL
 uses
-  PasTree, PasResolve, FPPascalParser; // Usar parser real
+  PasTree, PasResolve, FPPascalParser; // Использовать реальный парсер
 
 type
+  /// <summary>
+  /// Улучшенный LSP-сервер для языка Pascal
+  /// </summary>
   TEnhancedLSPServer = class(TLSPServer)
   private
     FParser: TFPPascalParser;
     FSymbolTable: TSymbolTable;
     
+    /// <summary>
+    /// Разбирает содержимое документа и обновляет внутреннее представление
+    /// </summary>
+    /// <param name="AUri">URI документа</param>
+    /// <param name="AText">Текст документа</param>
     procedure ParseDocument(const AUri, AText: string);
+    
+    /// <summary>
+    /// Находит символ по заданной позиции в документе
+    /// </summary>
+    /// <param name="AUri">URI документа</param>
+    /// <param name="ALine">Номер строки</param>
+    /// <param name="AChar">Позиция символа в строке</param>
+    /// <returns>Найденный символ или nil</returns>
     function FindSymbolAtPosition(const AUri: string; ALine, AChar: Integer): TSymbol;
+    
+    /// <summary>
+    /// Возвращает список вариантов автодополнения для заданной позиции
+    /// </summary>
+    /// <param name="AUri">URI документа</param>
+    /// <param name="ALine">Номер строки</param>
+    /// <param name="AChar">Позиция символа в строке</param>
+    /// <returns>Массив элементов автодополнения</returns>
     function GetSymbolCompletions(const AUri: string; ALine, AChar: Integer): TArray<TCompletionItem>;
     
   protected
-    // Override métodos para usar parser real
+    // Переопределить методы для использования реального парсера
     procedure HandleTextDocumentDidChange(const AParams: TJSONObject); override;
     procedure HandleTextDocumentHover(const AId: TJSONData; const AParams: TJSONObject); override;
     procedure HandleTextDocumentCompletion(const AId: TJSONData; const AParams: TJSONObject); override;
     
-    // Novos métodos
+    // Новые методы
     procedure HandleTextDocumentDefinition(const AId: TJSONData; const AParams: TJSONObject);
     procedure HandleTextDocumentReferences(const AId: TJSONData; const AParams: TJSONObject);
     procedure HandleTextDocumentDocumentSymbol(const AId: TJSONData; const AParams: TJSONObject);
@@ -106,7 +130,11 @@ type
     
   end;
 
-// 2. IMPLEMENTAR DIAGNÓSTICOS (ERROS/WARNINGS)
+// 2. РЕАЛИЗОВАТЬ ДИАГНОСТИКУ (ОШИБКИ/ПРЕДУПРЕЖДЕНИЯ)
+/// <summary>
+/// Обрабатывает диагностику текстового документа, выявляя ошибки и предупреждения
+/// </summary>
+/// <param name="AUri">URI документа для диагностики</param>
 procedure TEnhancedLSPServer.HandleTextDocumentDiagnostics(const AUri: string);
 var
   Diagnostics: TJSONArray;
@@ -117,7 +145,7 @@ var
 begin
   if not FDocuments.TryGetValue(AUri, Text) then Exit;
   
-  // Compilar/validar código
+  // Компилировать/проверять код
   Errors := FParser.ValidateCode(Text);
   Diagnostics := TJSONArray.Create;
   
@@ -125,18 +153,23 @@ begin
   begin
     Diagnostic := TJSONObject.Create;
     Diagnostic.Add('range', CreateRange(Error.Line, Error.Column, Error.Line, Error.Column + Error.Length));
-    Diagnostic.Add('severity', IfThen(Error.IsWarning, 2, 1)); // Error=1, Warning=2
+    Diagnostic.Add('severity', IfThen(Error.IsWarning, 2, 1)); // Ошибка=1, Предупреждение=2
     Diagnostic.Add('source', 'pascal-lsp');
     Diagnostic.Add('message', Error.Message);
     Diagnostics.Add(Diagnostic);
   end;
   
-  // Enviar diagnósticos
+  // Отправить диагностику
   SendNotification('textDocument/publishDiagnostics', 
     TJSONObject.Create(['uri', AUri, 'diagnostics', Diagnostics]));
 end;
 
-// 3. IMPLEMENTAR GO TO DEFINITION
+// 3. РЕАЛИЗОВАТЬ ПЕРЕХОД К ОПРЕДЕЛЕНИЮ
+/// <summary>
+/// Обрабатывает запрос на переход к определению символа
+/// </summary>
+/// <param name="AId">Идентификатор запроса</param>
+/// <param name="AParams">Параметры запроса</param>
 procedure TEnhancedLSPServer.HandleTextDocumentDefinition(const AId: TJSONData; const AParams: TJSONObject);
 var
   Symbol: TSymbol;
@@ -172,7 +205,12 @@ begin
   SendResponse(AId, TJSONNull.Create);
 end;
 
-// 4. IMPLEMENTAR SÍMBOLOS DO DOCUMENTO
+// 4. РЕАЛИЗОВАТЬ СИМВОЛЫ ДОКУМЕНТА
+/// <summary>
+/// Обрабатывает запрос на получение символов документа (функции, процедуры, типы и т.д.)
+/// </summary>
+/// <param name="AId">Идентификатор запроса</param>
+/// <param name="AParams">Параметры запроса</param>
 procedure TEnhancedLSPServer.HandleTextDocumentDocumentSymbol(const AId: TJSONData; const AParams: TJSONObject);
 var
   Symbols: TJSONArray;
@@ -180,7 +218,7 @@ var
   ParsedSymbols: TArray<TDocumentSymbol>;
   DocSymbol: TDocumentSymbol;
 begin
-  // Extrair símbolos do documento (functions, procedures, types, etc.)
+  // Извлечь символы из документа (functions, procedures, types, etc.)
   ParsedSymbols := FParser.ExtractSymbols(AUri);
   Symbols := TJSONArray.Create;
   
@@ -201,7 +239,12 @@ begin
   SendResponse(AId, Symbols);
 end;
 
-// 5. IMPLEMENTAR FORMATAÇÃO
+// 5. РЕАЛИЗОВАТЬ ФОРМАТИРОВАНИЕ
+/// <summary>
+/// Обрабатывает запрос на форматирование текстового документа
+/// </summary>
+/// <param name="AId">Идентификатор запроса</param>
+/// <param name="AParams">Параметры запроса</param>
 procedure TEnhancedLSPServer.HandleTextDocumentFormatting(const AId: TJSONData; const AParams: TJSONObject);
 var
   TextDocument: TJSONObject;
@@ -220,7 +263,7 @@ begin
     TabSize := Options.Get('tabSize', 2);
     InsertSpaces := Options.Get('insertSpaces', True);
     
-    // Formatar código Pascal
+    // Форматировать код Pascal
     FormattedText := FormatPascalCode(Text, TabSize, InsertSpaces);
     
     if FormattedText <> Text then
@@ -228,7 +271,7 @@ begin
       TextEdits := TJSONArray.Create;
       Edit := TJSONObject.Create;
       
-      // Substituir todo o documento
+      // Заменить весь документ
       Edit.Add('range', CreateRange(0, 0, GetLineCount(Text), 0));
       Edit.Add('newText', FormattedText);
       TextEdits.Add(Edit);
@@ -236,60 +279,59 @@ begin
       SendResponse(AId, TextEdits);
     end
     else
-      SendResponse(AId, TJSONArray.Create); // Sem mudanças
+      SendResponse(AId, TJSONArray.Create); // Без изменений
   end;
 end;
 
 *)
 
-// === ROADMAP DE FUNCIONALIDADES ===
-
+//TODO: === ПЛАН РАЗРАБОТКИ ФУНКЦИОНАЛОВ ===
 (*
-FUNCIONALIDADES BÁSICAS (✅ Implementadas):
+БАЗОВЫЕ ФУНКЦИИ (✅ Реализовано):
 - ✅ Initialize/Shutdown
-- ✅ Document Sync (open/change/close)  
-- ✅ Hover básico
-- ✅ Completion básico (palavras-chave)
+- ✅ Синхронизация документов (открытие/изменение/закрытие)  
+- ✅ Базовая подсказка при наведении
+- ✅ Базовое автодополнение (ключевые слова)
 
-PRÓXIMAS FUNCIONALIDADES:
-- 🚧 Parsing real de Pascal
-- 🚧 Go to Definition
-- 🚧 Find References  
-- 🚧 Document Symbols (outline)
-- 🚧 Diagnostics (erros/warnings)
-- 🚧 Code Formatting
-- 🚧 Rename Symbol
-- 🚧 Code Actions (quick fixes)
-- 🚧 Signature Help (parâmetros de função)
+СЛЕДУЮЩИЕ ФУНКЦИИ (🚧 Задачи):
+- 🚧 Реальный разбор Pascal
+- 🚧 Переход к определению
+- 🚧 Найти ссылки  
+- 🚧 Символы документа (структура)
+- 🚧 Диагностика (ошибки/предупреждения)
+- 🚧 Форматирование кода
+- 🚧 Переименование символа
+- 🚧 Действия с кодом (быстрые исправления)
+- 🚧 Справка по сигнатуре (параметры функции)
 
-FUNCIONALIDADES AVANÇADAS:
-- 📋 Workspace Symbols (busca global)
-- 📋 Call Hierarchy
-- 📋 Type Hierarchy  
-- 📋 Folding Ranges
-- 📋 Selection Ranges
-- 📋 Semantic Tokens (syntax highlighting)
-- 📋 Inlay Hints (tipos implícitos)
-- 📋 Code Lens (referências inline)
+ПРОДВИНУТЫЕ ФУНКЦИИ (📋 Пожелания Features):
+- 📋 Символы рабочей области (глобальный поиск)
+- 📋 Иерархия вызовов
+- 📋 Иерархия типов  
+- 📋 Диапазоны сворачивания
+- 📋 Диапазоны выделения
+- 📋 Семантические токены (подсветка синтаксиса)
+- 📋 Встроенные подсказки (неявные типы)
+- 📋 Информация в строке кода (inline references)
 
-INTEGRAÇÕES:
-- 🔧 Compilador FPC/Delphi
-- 🔧 Debugger (DAP)
-- 🔧 Unit Testing
-- 🔧 Code Coverage
-- 🔧 Static Analysis
-- 🔧 Package Manager
+ИНТЕГРАЦИИ (🔧 Технический долг):
+- 🔧 Компилятор FPC/Delphi
+- 🔧 Отладчик (DAP)
+- 🔧 Модульное тестирование
+- 🔧 Покрытие кода
+- 🔧 Статический анализ
+- 🔧 Менеджер пакетов
 *)
 
-// === EXEMPLO DE USO NO VS CODE ===
+// === ПРИМЕР ИСПОЛЬЗОВАНИЯ В VS CODE ===
 
 (*
-1. Abrir test.pas no VS Code
-2. Hover sobre 'TPerson' → Ver documentação
-3. Digitar 'Calc.' → Ver completion com métodos
-4. Ctrl+Click em 'TCalculator' → Go to definition (futuro)
-5. Ctrl+Shift+O → Ver símbolos do documento (futuro)
-6. F2 em variável → Rename (futuro)
+1. Открыть test.pas в VS Code
+2. Навести курсор на 'TPerson' → Посмотреть документацию
+3. Ввести 'Calc.' → Посмотреть автодополнение с методами
+4. Ctrl+Click на 'TCalculator' → Перейти к определению (в будущем)
+5. Ctrl+Shift+O → Посмотреть символы документа (в будущем)
+6. F2 на переменной → Переименовать (в будущем)
 *)
 
 end.
